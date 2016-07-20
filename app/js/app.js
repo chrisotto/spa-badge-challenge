@@ -24,7 +24,7 @@ var loadTeachersShow = function (teacher) {
     url: 'http://sample-badges-api.herokuapp.com/teachers/' + teacher.id
   })
   .done(function(response) {
-    renderTemplate('#teachers-show-template', response);
+    renderTemplate('#teachers-show-template', {teacher: teacher, badges: response});
     loadListeners();
   })
   .fail(function(error) {
