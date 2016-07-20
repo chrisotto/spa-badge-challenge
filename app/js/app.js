@@ -4,8 +4,7 @@ $(function() {
 });
 
 var loadTeachersIndex = function() {
-  $.ajax({
-    method: 'GET',
+  $.get({
     url: 'http://sample-badges-api.herokuapp.com/teachers'
   })
   .done(function(response) {
@@ -19,8 +18,7 @@ var loadTeachersIndex = function() {
 }
 
 var loadTeachersShow = function (teacher) {
-  $.ajax({
-    method: 'GET',
+  $.get({
     url: 'http://sample-badges-api.herokuapp.com/teachers/' + teacher.id
   })
   .done(function(response) {
@@ -39,9 +37,23 @@ var renderTemplate = function(template, context) {
   $('main').html(theCompiledHtml);
 };
 
+var createBadge = function(data) {
+  $.post({
+    url: 'http://sample-badges-api.herokuapp.com/badges',
+    data: data
+  })
+  .done(function(response) {
+    console.log(response);
+  })
+  .fail(function(error) {
+    console.log(error);
+  });
+}
+
 var loadListeners = function() {
   teachersShowListener();
   // teachersIndexListener();
+  createBadgeListener();
 };
 
 var teachersShowListener = function() {
@@ -50,5 +62,17 @@ var teachersShowListener = function() {
     name = $(this).html();
     window.location.hash = name.toLowerCase();
     loadTeachersShow(teachers.find(function(t){return t.name == name}));
+  });
+};
+
+// var teachersIndexListener = function() {
+
+// };
+
+var createBadgeListener = function() {
+  $('div.add-badge form').on('submit', function(event) {
+    event.preventDefault();
+    data = $(this).serialize();
+    createBadge(data);
   });
 };
