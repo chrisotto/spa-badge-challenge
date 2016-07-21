@@ -1,64 +1,82 @@
-// If we avoid use of jQuery, we can remove the $ and just put the script tag immediately before </body>
 $(function() {
-  loadView();
-  window.onhashchange = function(){loadView()};
+  var teachers;
+  loadTeachersIndex();
 });
 
-var loadView = function() {
-  renderTemplate(getViewWithContext());
+var loadTeachersIndex = function() {
+  $.get({
+    url: 'http://sample-badges-api.herokuapp.com/teachers'
+  })
+  .done(function(response) {
+    teachers = response;
+    renderTemplate('#teachers-index-template', {teachers: teachers});
+    loadListeners();
+  })
+  .fail(function(error) {
+    console.log(error);
+  });
+}
+
+var loadTeachersShow = function (teacher) {
+  $.get({
+    url: 'http://sample-badges-api.herokuapp.com/teachers/' + teacher.id
+  })
+  .done(function(response) {
+    renderTemplate('#teachers-show-template', {teacher: teacher, badges: response});
+    loadListeners();
+  })
+  .fail(function(error) {
+    console.log(error);
+  });
 };
 
-var getViewWithContext = function() {
-  locationHash = window.location.hash; // Combine this with if statement on next line, change var to name (from locationHash) and slice off the #
-  if (locationHash == "") {
-    return {
-      template: '#teachers-index-template',
-      context: getTeachers()
-    }
-  } else {
-    return {
-      template: '#teachers-show-template',
-      context: getTeachers() // Change to getTeacher() (or whatever the context needs to be for the show page);  use locationHash.slice(1) (i.e. name) as argument to identify correct teacher.
-    };
-  }
-};
-
-var renderTemplate = function(view) {
-  var theTemplateScript = $(view.template).html();
+var renderTemplate = function(template, context) {
+  var theTemplateScript = $(template).html();
   var theTemplate = Handlebars.compile(theTemplateScript);
-  var context = view.context;
   var theCompiledHtml = theTemplate(context);
   $('main').html(theCompiledHtml);
 };
 
-var getTeachers = function() {
-  return {teachers: [{"id":1,"name":"Hunter","created_at":"2016-06-22T09:36:59.818Z","updated_at":"2016-06-22T09:36:59.818Z"},{"id":2,"name":"Derek","created_at":"2016-06-22T09:36:59.830Z","updated_at":"2016-06-22T09:36:59.830Z"},{"id":3,"name":"Seba","created_at":"2016-06-22T09:36:59.837Z","updated_at":"2016-06-22T09:36:59.837Z"},{"id":4,"name":"Shambhavi","created_at":"2016-06-22T09:36:59.843Z","updated_at":"2016-06-22T09:36:59.843Z"},{"id":5,"name":"Ken","created_at":"2016-06-22T09:36:59.848Z","updated_at":"2016-06-22T09:36:59.848Z"},{"id":6,"name":"Walker","created_at":"2016-06-22T09:36:59.854Z","updated_at":"2016-06-22T09:36:59.854Z"},{"id":7,"name":"Julian","created_at":"2016-06-22T09:36:59.860Z","updated_at":"2016-06-22T09:36:59.860Z"},{"id":8,"name":"Jaclyn","created_at":"2016-06-22T09:36:59.866Z","updated_at":"2016-06-22T09:36:59.866Z"},{"id":9,"name":"Jen","created_at":"2016-06-22T09:36:59.871Z","updated_at":"2016-06-22T09:36:59.871Z"},{"id":10,"name":"Sherif","created_at":"2016-06-22T09:36:59.876Z","updated_at":"2016-06-22T09:36:59.876Z"}]};
-};
+var createBadge = function(data) {
+  $.post({
+    url: 'http://sample-badges-api.herokuapp.com/badges',
+    data: data
+  })
+  .done(function(response) {
 
-  // getTeachers call
-  // apiCall({type:'GET', url: 'http://sample-badges-api.herokuapp.com/teachers'})
-  // .then(function(response) {console.log(response)})
-  // .catch(function(error) {console.log(error)});
 
-var apiCall = function(args) {
-  var promise = new Promise(function(resolve, reject) {
-    var request = new XMLHttpRequest();
-    request.open(args.type, args.url);
-    request.send();
-    request.onload = function() {
-      if (this.status >= 200 && this.status < 300) {
-        resolve(this.response);
-      } else {
-        reject(this.statusText);
-      }
-    };
-    request.onerror = function() {
-      reject(this.statusText);
-    };
+cw    console.log(response);
+
+
+  })
+  .fail(function(error) {
+    console.log(error);
   });
-  return promise;
+}
+
+var loadListeners = function() {
+  teachersShowListener();
+  // teachersIndexListener();
+  createBadgeListener();
 };
 
-Handlebars.registerHelper('toLowerCase', function(str) {
-  return str.toLowerCase();
-});
+var teachersShowListener = function() {
+  $('a[href="#show"]').on("click", function(event) {
+    event.preventDefault();
+    name = $(this).html();
+    window.location.hash = name.toLowerCase();
+    loadTeachersShow(teachers.find(function(t){return t.name == name}));
+  });
+};
+
+// var teachersIndexListener = function() {
+
+// };
+
+var createBadgeListener = function() {
+  $('div.add-badge form').on('submit', function(event) {
+    event.preventDefault();
+    data = $(this).serialize();
+    createBadge(data);
+  });
+};
