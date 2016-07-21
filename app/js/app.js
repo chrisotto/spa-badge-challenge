@@ -43,7 +43,11 @@ var createBadge = function(data) {
     data: data
   })
   .done(function(response) {
-    console.log(response);
+
+
+cw    console.log(response);
+
+
   })
   .fail(function(error) {
     console.log(error);
